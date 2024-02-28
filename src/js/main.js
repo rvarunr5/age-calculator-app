@@ -1,4 +1,4 @@
-import "../style.css";
+import "../css/style.css";
 import errors from "./errors";
 
 const day = document.querySelector("#input-day");
