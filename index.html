@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Age Calculator</title>
+  </head>
+  <body>
+    <div class="wrapper">
+      <form class="age-form" id="age-form">
+        <div class="form-content">
+          <div class="form-control">
+            <label for="input-day" class="input-day"> DAY </label>
+            <input type="text" placeholder="DD" id="input-day" />
+            <small></small>
+          </div>
+          <div class="form-control">
+            <label for="input-month" class="input-month"> MONTH </label>
+            <input type="text" id="input-month" placeholder="MM" />
+            <small></small>
+          </div>
+          <div class="form-control">
+            <label for="input-year" class="input-year"> YEAR </label>
+            <input type="text" id="input-year" placeholder="YYYY" />
+            <small></small>
+          </div>
+        </div>
+        <div class="form-submit">
+          <hr />
+          <input
+            type="image"
+            name="submit"
+            src="./public/images/icon-arrow.svg"
+          />
+          <hr class="mobile-only" />
+        </div>
+      </form>
+
+      <div class="result">
+        <div class="result-item">
+          <div class="result-year">--</div>
+          <div>years</div>
+        </div>
+        <div class="result-item">
+          <div class="result-month">--</div>
+          <div>months</div>
+        </div>
+        <div class="result-item">
+          <div class="result-day">--</div>
+          <div>days</div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
