@@ -1,5 +1,6 @@
 import "../css/style.css";
 import errors from "./errors";
+import ValidateDate from "./validateDate";
 
 const day = document.querySelector("#input-day");
 const month = document.querySelector("#input-month");
@@ -11,138 +12,97 @@ const resultDay = document.querySelector(".result-day");
 const resultMonth = document.querySelector(".result-month");
 const resultYear = document.querySelector(".result-year");
 
-form.addEventListener("submit", (event) => {
-  const yearValue = Number(year.value.trim());
-  const monthValue = Number(month.value.trim());
-  const dayValue = Number(day.value.trim());
-  event.preventDefault();
-  if (checkForRequiredFields([...inputs])) {
-    if (isValidDate(dayValue, monthValue, yearValue)) {
-      if (compareToCurrentDate(yearValue, monthValue, dayValue)) {
-        inputs.forEach((input) => {
-          removeError(input);
-        });
-        calculateAge(yearValue, monthValue, dayValue);
-      }
-    }
-  }
-});
-
 function setErrorForm(input, errorText) {
   const parent = input.parentElement;
   const errorItem = parent.querySelector("small");
   parent.classList.add("error");
-  errorItem.textContent = errorText;
+  errorItem.innerHTML = errorText;
 }
 
-function isValidMonth(monthValue) {
-  return monthValue > 0 && monthValue < 13 && !isNaN(monthValue);
-}
-
-function isValidYear(yearValue) {
-  return !isNaN(yearValue) && yearValue <= new Date().getFullYear();
-}
-function isValidDay(dayValue, daysInMonth) {
-  return !isNaN(dayValue) && dayValue > 0 && dayValue <= daysInMonth;
-}
-function getDaysInMonth(isLeapYear) {
-  return {
-    1: 31,
-    2: isLeapYear ? 29 : 28,
-    3: 31,
-    4: 30,
-    5: 31,
-    6: 30,
-    7: 31,
-    8: 31,
-    9: 30,
-    10: 31,
-    11: 30,
-    12: 31,
-  };
-}
-function isValidDate(dayValue, monthValue, yearValue) {
-  let hasError = false;
-
-  const isLeapYear = yearValue % 4 === 0;
-  const daysInMonth = getDaysInMonth(isLeapYear);
-
-  if (!isValidDay(dayValue, daysInMonth[monthValue])) {
-    setErrorForm(day, errors["valid_day"]);
-    hasError = true;
-  }
-
-  if (!isValidMonth(monthValue)) {
-    setErrorForm(month, errors["valid_month"]);
-    hasError = true;
-  }
-  if (!isValidYear(yearValue)) {
-    setErrorForm(year, errors["valid_year"]);
-    hasError = true;
-  }
-
-  if (hasError) return false;
-  else {
-    resetResult();
-    return true;
-  }
-}
 function removeError(input) {
   const parent = input.parentElement;
   const errorItem = parent.querySelector("small");
   parent.classList.remove("error");
-  errorItem.textContent = "";
+  errorItem.innerHTML = "";
 }
+
+function resetOutput() {
+  [resultDay, resultMonth, resultYear].forEach((item) => {
+    item.innerHTML = "--";
+  });
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const dayValue = Number(day.value.trim());
+  const monthValue = Number(month.value.trim());
+  const yearValue = Number(year.value.trim());
+  resetOutput();
+  if (checkForRequiredFields([...inputs])) {
+    if (isValidDate(dayValue, monthValue, yearValue)) {
+      calculateAge(yearValue, monthValue, dayValue);
+    }
+  }
+});
+
+function isValidDate(dayValue, monthValue, yearValue) {
+  let validDate = false;
+  const validateDate = new ValidateDate(dayValue, monthValue, yearValue);
+  const currentDate = new Date();
+  const givenDate = new Date(yearValue, monthValue - 1, dayValue);
+  if (!validateDate.isValidYear()) {
+    setErrorForm(year, errors["invalid_year"]);
+  } else if (!validateDate.isValidMonth()) {
+    setErrorForm(month, errors["invalid_month"]);
+  } else if (!validateDate.isValidDay()) {
+    setErrorForm(day, errors["invalid_day"]);
+  } else if (
+    givenDate > currentDate &&
+    givenDate.getMonth() > currentDate.getMonth()
+  ) {
+    setErrorForm(month, errors["past_month"]);
+  } else if (
+    givenDate > currentDate &&
+    givenDate.getMonth() === currentDate.getMonth() &&
+    givenDate.getDay() > currentDate.getDay()
+  ) {
+    setErrorForm(day, errors["past_day"]);
+  } else {
+    validDate = true;
+  }
+  return validDate;
+}
+
 function checkForRequiredFields(inputs) {
-  let hasError = false;
+  let hasValue = true;
   [...inputs].forEach((input) => {
     if (input.value.trim() === "") {
       setErrorForm(input, errors["required"]);
-      hasError = true;
+      hasValue = false;
     } else {
       removeError(input);
     }
   });
-  if (hasError) return false;
-  else {
-    resetResult();
-    return true;
-  }
+
+  return hasValue;
 }
-function compareToCurrentDate(yearValue, monthValue, dayValue) {
-  const currentDate = new Date();
-  const givenDate = new Date(yearValue, monthValue - 1, dayValue);
-  if (givenDate > currentDate) {
-    setErrorForm(day, errors["past_day"]);
-    return false;
-  }
-  resetResult();
-  return true;
-}
+
 function calculateAge(yearValue, monthValue, dayValue) {
-  const isLeapYear = yearValue % 4 === 0;
-  const daysInMonth = getDaysInMonth(isLeapYear);
-  const currentDate = new Date();
-  const givenDate = new Date(yearValue, monthValue - 1, dayValue);
-  const diff = currentDate - givenDate;
+  const validateDate = new ValidateDate(yearValue, monthValue, dayValue);
+  const daysInMonth = validateDate.getDaysInMonth();
+  const diff = new Date() - new Date(yearValue, monthValue - 1, dayValue);
   const monthDiff = new Date().getMonth() - (monthValue - 1);
-  const daysDiff = currentDate.getDate() - dayValue;
+  const daysDiff = new Date().getDate() - dayValue;
 
   const months = monthDiff < 0 ? 12 - Math.abs(monthDiff) : monthDiff;
 
   const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
   const days =
     daysDiff < 0
-      ? daysInMonth[monthValue] - (currentDate.getDay() - dayValue)
+      ? daysInMonth[monthValue] - (new Date().getDay() - dayValue)
       : daysDiff;
 
   resultDay.innerText = days;
   resultMonth.innerText = months;
   resultYear.innerText = years;
-}
-
-function resetResult() {
-  [resultDay, resultMonth, resultYear].forEach((item) => {
-    item.innerText = "--";
-  });
 }
